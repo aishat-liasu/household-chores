@@ -434,3 +434,27 @@ class LayoutAccessibilityTests(TestCase):
 
     def test_stylesheet_is_linked(self):
         self.assertContains(self.client.get("/"), "css/app.css")
+
+
+class AuthAwareHeaderTests(TestCase):
+    def setUp(self):
+        self.parent = get_user_model().objects.create_user(
+            "mumH", password="secret123", role="parent")
+
+    def test_anonymous_header_shows_sign_in(self):
+        r = self.client.get("/")
+        self.assertContains(r, "Sign in")
+        self.assertNotContains(r, "Log out")
+
+    def test_authenticated_header_shows_name_and_logout(self):
+        self.client.login(username="mumH", password="secret123")
+        r = self.client.get("/")
+        self.assertContains(r, "mumH")
+        self.assertContains(r, "Log out")
+
+    def test_logout_returns_to_logged_out_state(self):
+        self.client.login(username="mumH", password="secret123")
+        self.client.post("/logout/")
+        r = self.client.get("/")
+        self.assertContains(r, "Sign in")
+        self.assertNotContains(r, "Log out")

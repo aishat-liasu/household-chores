@@ -2,8 +2,4 @@
 {% block content %}
   <h2>Welcome, {{ user.username }}</h2>
   <p>You are signed in as a {{ user.role }}.</p>
-  <form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Log out</button>
-  </form>
 {% endblock %}
