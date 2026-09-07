@@ -3,7 +3,8 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 
-from .forms import MemberCreationForm
+from .forms import ChoreForm, MemberCreationForm
+from .models import Chore
 
 
 def home(request):
@@ -39,6 +40,25 @@ def household_members(request):
     members = household.members.all() if household else []
     return render(request, "household/members.html",
                   {"household": household, "members": members})
+
+
+@login_required
+def chore_create(request):
+    """Parent-only: create a chore and assign it to a household member."""
+    if not request.user.is_parent:
+        raise PermissionDenied
+    household = request.user.household
+    if request.method == "POST":
+        form = ChoreForm(request.POST, household=household)
+        if form.is_valid():
+            chore = form.save(commit=False)
+            chore.household = household
+            chore.status = Chore.Status.ASSIGNED
+            chore.save()
+            return redirect("dashboard")
+    else:
+        form = ChoreForm(household=household)
+    return render(request, "chores/create.html", {"form": form})
 
 
 def health(request):
