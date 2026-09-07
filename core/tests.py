@@ -80,3 +80,37 @@ class AuthTests(TestCase):
         r = self.client.post("/logout/")
         self.assertEqual(r.status_code, 302)
         self.assertEqual(self.client.get("/dashboard/").status_code, 302)
+
+
+class MemberSignupTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.parent = U.objects.create_user("mum", password="secret123", role="parent")
+        self.child = U.objects.create_user("kid", password="secret123", role="child")
+
+    def test_parent_can_create_member_who_can_log_in(self):
+        self.client.login(username="mum", password="secret123")
+        r = self.client.post("/members/new/", {
+            "username": "junior", "role": "child",
+            "password1": "Sup3rSecret!", "password2": "Sup3rSecret!"})
+        self.assertRedirects(r, "/dashboard/")
+        U = get_user_model()
+        self.assertTrue(U.objects.filter(username="junior", role="child").exists())
+        self.assertTrue(self.client.login(username="junior", password="Sup3rSecret!"))
+
+    def test_duplicate_username_rejected(self):
+        self.client.login(username="mum", password="secret123")
+        r = self.client.post("/members/new/", {
+            "username": "kid", "role": "child",
+            "password1": "Sup3rSecret!", "password2": "Sup3rSecret!"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "already exists")
+
+    def test_child_cannot_create_member(self):
+        self.client.login(username="kid", password="secret123")
+        self.assertEqual(self.client.get("/members/new/").status_code, 403)
+
+    def test_anonymous_redirected_to_login(self):
+        r = self.client.get("/members/new/")
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("/login/", r.url)
