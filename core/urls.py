@@ -9,6 +9,7 @@ urlpatterns = [
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("household/", views.household_members, name="household_members"),
+    path("chores/new/", views.chore_create, name="chore_create"),
     path("members/new/", views.member_create, name="member_create"),
     path("health/", views.health, name="health"),
     path("ping/", views.ping, name="ping"),

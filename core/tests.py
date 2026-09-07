@@ -164,3 +164,44 @@ class ChoreModelTests(TestCase):
         c = Chore(title="Bad", assignee=self.kid, household=self.h, points=-1)
         with self.assertRaises(ValidationError):
             c.full_clean()
+
+
+class ChoreCreateTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.other = Household.objects.create(name="Other")
+        self.parent = U.objects.create_user("mumC", password="secret123", role="parent", household=self.h)
+        self.child = U.objects.create_user("kidC", password="secret123", role="child", household=self.h)
+        self.outsider = U.objects.create_user("kidO", password="secret123", role="child", household=self.other)
+
+    def test_parent_creates_assigned_chore(self):
+        self.client.login(username="mumC", password="secret123")
+        r = self.client.post("/chores/new/", {
+            "title": "Dishes", "description": "", "points": 5,
+            "assignee": self.child.id, "recurrence": "none"})
+        self.assertRedirects(r, "/dashboard/")
+        c = Chore.objects.get(title="Dishes")
+        self.assertEqual(c.assignee, self.child)
+        self.assertEqual(c.status, "assigned")
+        self.assertEqual(c.household, self.h)
+
+    def test_assignee_limited_to_household(self):
+        self.client.login(username="mumC", password="secret123")
+        r = self.client.post("/chores/new/", {
+            "title": "X", "description": "", "points": 1,
+            "assignee": self.outsider.id, "recurrence": "none"})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(Chore.objects.filter(title="X").exists())
+
+    def test_child_cannot_create(self):
+        self.client.login(username="kidC", password="secret123")
+        self.assertEqual(self.client.get("/chores/new/").status_code, 403)
+
+    def test_invalid_input_rejected(self):
+        self.client.login(username="mumC", password="secret123")
+        r = self.client.post("/chores/new/", {
+            "title": "", "description": "", "points": 5,
+            "assignee": self.child.id, "recurrence": "none"})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(Chore.objects.filter(title="").exists())
