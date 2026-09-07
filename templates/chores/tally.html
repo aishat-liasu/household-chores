@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Points</h2>
+  <ul>
+    {% for member, points in rows %}
+      <li>{{ member.username }}: {{ points }} pts</li>
+    {% empty %}
+      <li>No members yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
