@@ -32,3 +32,19 @@ class StaticAssetTests(TestCase):
 
     def test_htmx_is_findable(self):
         self.assertIsNotNone(finders.find("vendor/htmx.min.js"))
+
+
+from django.contrib.auth import get_user_model
+
+
+class UserRoleTests(TestCase):
+    def test_default_role_is_child(self):
+        user = get_user_model().objects.create_user("kid", password="pw")
+        self.assertEqual(user.role, "child")
+        self.assertTrue(user.is_child)
+        self.assertFalse(user.is_parent)
+
+    def test_parent_role_helpers(self):
+        user = get_user_model().objects.create_user("mum", password="pw", role="parent")
+        self.assertTrue(user.is_parent)
+        self.assertFalse(user.is_child)
