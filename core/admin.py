@@ -19,3 +19,13 @@ class CustomUserAdmin(UserAdmin):
 @admin.register(Household)
 class HouseholdAdmin(admin.ModelAdmin):
     list_display = ("name",)
+
+
+from .models import Chore
+
+
+@admin.register(Chore)
+class ChoreAdmin(admin.ModelAdmin):
+    list_display = ("title", "assignee", "household", "points", "status", "recurrence")
+    list_filter = ("status", "recurrence", "household")
+    search_fields = ("title",)

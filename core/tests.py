@@ -138,3 +138,29 @@ class HouseholdTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "kidA")
         self.assertNotContains(r, "mumB")
+
+
+from django.core.exceptions import ValidationError
+
+from core.models import Chore
+
+
+class ChoreModelTests(TestCase):
+    def setUp(self):
+        self.h = Household.objects.create(name="Home")
+        self.kid = get_user_model().objects.create_user(
+            "kid2", password="x", role="child", household=self.h
+        )
+
+    def test_create_chore_defaults(self):
+        c = Chore.objects.create(
+            title="Dishes", assignee=self.kid, household=self.h, points=5
+        )
+        self.assertEqual(c.status, Chore.Status.ASSIGNED)
+        self.assertEqual(c.recurrence, Chore.Recurrence.NONE)
+        self.assertEqual(c.points, 5)
+
+    def test_points_cannot_be_negative(self):
+        c = Chore(title="Bad", assignee=self.kid, household=self.h, points=-1)
+        with self.assertRaises(ValidationError):
+            c.full_clean()
