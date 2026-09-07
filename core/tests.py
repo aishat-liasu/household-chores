@@ -114,3 +114,27 @@ class MemberSignupTests(TestCase):
         r = self.client.get("/members/new/")
         self.assertEqual(r.status_code, 302)
         self.assertIn("/login/", r.url)
+
+
+from core.models import Household
+
+
+class HouseholdTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.hA = Household.objects.create(name="Alpha")
+        self.hB = Household.objects.create(name="Beta")
+        self.pA = U.objects.create_user("mumA", password="secret123", role="parent", household=self.hA)
+        self.cA = U.objects.create_user("kidA", password="secret123", role="child", household=self.hA)
+        self.pB = U.objects.create_user("mumB", password="secret123", role="parent", household=self.hB)
+
+    def test_user_belongs_to_one_household(self):
+        self.assertEqual(self.pA.household, self.hA)
+        self.assertIn(self.cA, list(self.hA.members.all()))
+
+    def test_members_page_scoped_to_own_household(self):
+        self.client.login(username="mumA", password="secret123")
+        r = self.client.get("/household/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "kidA")
+        self.assertNotContains(r, "mumB")
