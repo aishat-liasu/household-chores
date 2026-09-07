@@ -48,3 +48,35 @@ class UserRoleTests(TestCase):
         user = get_user_model().objects.create_user("mum", password="pw", role="parent")
         self.assertTrue(user.is_parent)
         self.assertFalse(user.is_child)
+
+
+class AuthTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            "mum", password="secret123", role="parent"
+        )
+
+    def test_login_page_renders(self):
+        r = self.client.get("/login/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Sign in")
+
+    def test_valid_login_redirects_to_dashboard(self):
+        r = self.client.post("/login/", {"username": "mum", "password": "secret123"})
+        self.assertRedirects(r, "/dashboard/")
+
+    def test_invalid_login_shows_error(self):
+        r = self.client.post("/login/", {"username": "mum", "password": "nope"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "didn't match")
+
+    def test_protected_page_redirects_anonymous(self):
+        r = self.client.get("/dashboard/")
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("/login/", r.url)
+
+    def test_logout_ends_session(self):
+        self.client.login(username="mum", password="secret123")
+        r = self.client.post("/logout/")
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(self.client.get("/dashboard/").status_code, 302)
