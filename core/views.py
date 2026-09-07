@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import ChoreForm, MemberCreationForm
 from .models import Chore
@@ -66,6 +67,19 @@ def my_chores(request):
     """List the signed-in member's own chores (pending first)."""
     chores = request.user.chores.order_by("status", "-created_at")
     return render(request, "chores/mine.html", {"chores": chores})
+
+
+@login_required
+@require_POST
+def chore_mark_done(request, chore_id):
+    """Member marks their own chore done (awaiting verification). No points yet."""
+    chore = get_object_or_404(Chore, id=chore_id)
+    if chore.assignee_id != request.user.id:
+        raise PermissionDenied
+    if chore.status == Chore.Status.ASSIGNED:
+        chore.status = Chore.Status.DONE
+        chore.save(update_fields=["status"])
+    return render(request, "chores/_chore_row.html", {"chore": chore})
 
 
 def health(request):
