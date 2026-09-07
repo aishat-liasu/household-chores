@@ -61,6 +61,13 @@ def chore_create(request):
     return render(request, "chores/create.html", {"form": form})
 
 
+@login_required
+def my_chores(request):
+    """List the signed-in member's own chores (pending first)."""
+    chores = request.user.chores.order_by("status", "-created_at")
+    return render(request, "chores/mine.html", {"chores": chores})
+
+
 def health(request):
     """Lightweight health check used to confirm the app is up."""
     return JsonResponse({"status": "ok"})

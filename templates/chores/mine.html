@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>My chores</h2>
+  <ul>
+    {% for chore in chores %}
+      <li>{{ chore.title }} — {{ chore.points }} pts — {{ chore.get_status_display }}</li>
+    {% empty %}
+      <li>You have no chores yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

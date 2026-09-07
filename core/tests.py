@@ -205,3 +205,25 @@ class ChoreCreateTests(TestCase):
             "assignee": self.child.id, "recurrence": "none"})
         self.assertEqual(r.status_code, 200)
         self.assertFalse(Chore.objects.filter(title="").exists())
+
+
+class MyChoresTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.a = U.objects.create_user("aa", password="secret123", role="child", household=self.h)
+        self.b = U.objects.create_user("bb", password="secret123", role="child", household=self.h)
+        Chore.objects.create(title="A-chore", assignee=self.a, household=self.h, points=3)
+        Chore.objects.create(title="B-chore", assignee=self.b, household=self.h, points=4)
+
+    def test_member_sees_only_their_chores(self):
+        self.client.login(username="aa", password="secret123")
+        r = self.client.get("/chores/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "A-chore")
+        self.assertNotContains(r, "B-chore")
+
+    def test_empty_state(self):
+        get_user_model().objects.create_user("cc", password="secret123", role="child", household=self.h)
+        self.client.login(username="cc", password="secret123")
+        self.assertContains(self.client.get("/chores/"), "no chores")
