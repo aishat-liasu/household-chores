@@ -69,3 +69,6 @@ Thumbs.db
 
 # ---- Node (if a JS front-end is added later) ----
 node_modules/
+
+# Desktop app auto-saved deliverables
+Claude outputs/

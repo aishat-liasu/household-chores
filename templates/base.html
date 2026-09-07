@@ -9,10 +9,13 @@
   <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <h1 class="site-title">Household Chores</h1>
+    <div class="wrap header-inner">
+      <a class="brand" href="/">Household Chores</a>
+    </div>
   </header>
-  <main class="content">
+  <main id="main" class="wrap content">
     {% block content %}{% endblock %}
   </main>
 </body>

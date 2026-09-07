@@ -424,3 +424,13 @@ class SeedDemoTests(TestCase):
         call_command("seed_demo")
         self.assertEqual(Household.objects.filter(name="Demo Household").count(), 1)
         self.assertEqual(get_user_model().objects.filter(username="demo_parent").count(), 1)
+
+
+class LayoutAccessibilityTests(TestCase):
+    def test_base_has_skip_link_and_main_landmark(self):
+        r = self.client.get("/")
+        self.assertContains(r, 'href="#main"')
+        self.assertContains(r, 'id="main"')
+
+    def test_stylesheet_is_linked(self):
+        self.assertContains(self.client.get("/"), "css/app.css")

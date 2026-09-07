@@ -29,6 +29,10 @@ Early planning. The scope is agreed; implementation has not yet begun.
 - AI / agent features (natural-language entry, smart reminders, fairness
   suggestions)
 
+## Styling
+
+A single hand-written CSS file (`static/css/app.css`), no framework and no build step — chosen to stay lightweight for a small server-rendered + HTMX app. Full theming/design system is out of scope for v1.
+
 ## Tech stack
 
 To be decided.
