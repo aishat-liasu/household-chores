@@ -151,3 +151,19 @@ textarea:focus-visible {
   main.content ul li { flex-direction: column; align-items: flex-start; }
   .header-inner { min-height: 52px; }
 }
+
+/* Auth-aware header navigation (#17) */
+.site-nav { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; }
+.site-nav a { color: #fff; text-decoration: none; font-size: .95rem; }
+.site-nav a:hover { text-decoration: underline; }
+.site-nav .who { color: #fff; opacity: .9; font-weight: 600; margin-left: 4px; }
+.logout-form { margin: 0; }
+.site-nav .linklike {
+  background: rgba(255,255,255,.16);
+  color: #fff;
+  padding: 6px 12px;
+  font-size: .9rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.site-nav .linklike:hover { background: rgba(255,255,255,.28); }
