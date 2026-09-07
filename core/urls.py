@@ -15,6 +15,7 @@ urlpatterns = [
     path("chores/verify/", views.pending_verifications, name="pending_verifications"),
     path("chores/<int:chore_id>/verify/", views.chore_verify, name="chore_verify"),
     path("members/new/", views.member_create, name="member_create"),
+    path("tally/", views.points_tally, name="points_tally"),
     path("health/", views.health, name="health"),
     path("ping/", views.ping, name="ping"),
 ]

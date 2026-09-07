@@ -106,6 +106,15 @@ def chore_verify(request, chore_id):
     return render(request, "chores/_verify_row.html", {"chore": chore})
 
 
+@login_required
+def points_tally(request):
+    """Each household member's total verified points."""
+    household = request.user.household
+    members = household.members.all() if household else []
+    rows = [(m, m.verified_points) for m in members]
+    return render(request, "chores/tally.html", {"rows": rows})
+
+
 def health(request):
     """Lightweight health check used to confirm the app is up."""
     return JsonResponse({"status": "ok"})

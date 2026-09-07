@@ -342,3 +342,27 @@ class RecurrenceTests(TestCase):
         self.client.post(f"/chores/{c.id}/verify/")
         assigned = Chore.objects.filter(assignee=self.child, status="assigned", recurrence="daily")
         self.assertEqual(assigned.count(), 1)
+
+
+class TallyTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.parent = U.objects.create_user("mumT", password="secret123", role="parent", household=self.h)
+        self.child = U.objects.create_user("kidT", password="secret123", role="child", household=self.h)
+        Chore.objects.create(title="V", assignee=self.child, household=self.h, points=5, status="verified")
+        Chore.objects.create(title="D", assignee=self.child, household=self.h, points=3, status="done")
+
+    def test_tally_counts_only_verified(self):
+        self.client.login(username="mumT", password="secret123")
+        r = self.client.get("/tally/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "5 pts")
+        self.assertNotContains(r, "8 pts")
+
+    def test_tally_updates_after_verification(self):
+        c = Chore.objects.create(title="D2", assignee=self.child, household=self.h, points=4, status="done")
+        self.client.login(username="mumT", password="secret123")
+        self.client.post(f"/chores/{c.id}/verify/")
+        r = self.client.get("/tally/")
+        self.assertContains(r, "9 pts")
