@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+  <p>Welcome to the family chore tracker.</p>
+  <button hx-get="/ping/" hx-target="#ping-result" hx-swap="innerHTML">Ping</button>
+  <span id="ping-result"></span>
+{% endblock %}
