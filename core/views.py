@@ -82,6 +82,29 @@ def chore_mark_done(request, chore_id):
     return render(request, "chores/_chore_row.html", {"chore": chore})
 
 
+@login_required
+def pending_verifications(request):
+    """Parent-only: chores in the parent's household awaiting verification."""
+    if not request.user.is_parent:
+        raise PermissionDenied
+    chores = Chore.objects.filter(
+        household=request.user.household, status=Chore.Status.DONE)
+    return render(request, "chores/verify_list.html", {"chores": chores})
+
+
+@login_required
+@require_POST
+def chore_verify(request, chore_id):
+    """Parent-only: approve a done chore, marking it verified (awards points via the derived tally)."""
+    if not request.user.is_parent:
+        raise PermissionDenied
+    chore = get_object_or_404(Chore, id=chore_id, household=request.user.household)
+    if chore.status == Chore.Status.DONE:
+        chore.status = Chore.Status.VERIFIED
+        chore.save(update_fields=["status"])
+    return render(request, "chores/_verify_row.html", {"chore": chore})
+
+
 def health(request):
     """Lightweight health check used to confirm the app is up."""
     return JsonResponse({"status": "ok"})

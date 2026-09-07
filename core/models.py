@@ -35,6 +35,13 @@ class User(AbstractUser):
     def is_child(self):
         return self.role == self.Role.CHILD
 
+    @property
+    def verified_points(self):
+        """Total points from this member's verified chores (derived)."""
+        total = self.chores.filter(status="verified").aggregate(
+            total=models.Sum("points"))["total"]
+        return total or 0
+
 
 class Chore(models.Model):
     """A task assigned to a family member, worth points once verified."""
