@@ -227,3 +227,36 @@ class MyChoresTests(TestCase):
         get_user_model().objects.create_user("cc", password="secret123", role="child", household=self.h)
         self.client.login(username="cc", password="secret123")
         self.assertContains(self.client.get("/chores/"), "no chores")
+
+
+class MarkDoneTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.a = U.objects.create_user("aa2", password="secret123", role="child", household=self.h)
+        self.b = U.objects.create_user("bb2", password="secret123", role="child", household=self.h)
+        self.chore = Chore.objects.create(title="Dishes", assignee=self.a, household=self.h, points=5)
+
+    def test_owner_marks_done_without_points(self):
+        self.client.login(username="aa2", password="secret123")
+        r = self.client.post(f"/chores/{self.chore.id}/done/")
+        self.assertEqual(r.status_code, 200)
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "done")
+        self.assertNotEqual(self.chore.status, "verified")
+
+    def test_non_owner_denied(self):
+        self.client.login(username="bb2", password="secret123")
+        r = self.client.post(f"/chores/{self.chore.id}/done/")
+        self.assertEqual(r.status_code, 403)
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "assigned")
+
+    def test_marking_verified_is_noop(self):
+        self.chore.status = "verified"
+        self.chore.save()
+        self.client.login(username="aa2", password="secret123")
+        r = self.client.post(f"/chores/{self.chore.id}/done/")
+        self.assertEqual(r.status_code, 200)
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "verified")

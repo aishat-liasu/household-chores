@@ -1,0 +1,6 @@
+{{ chore.title }} — {{ chore.points }} pts — {{ chore.get_status_display }}
+{% if chore.status == "assigned" %}
+  <button hx-post="{% url 'chore_mark_done' chore.id %}"
+          hx-target="#chore-{{ chore.id }}" hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>Mark done</button>
+{% endif %}
