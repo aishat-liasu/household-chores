@@ -302,3 +302,43 @@ class VerifyTests(TestCase):
         self.client.login(username="mumV", password="secret123")
         r = self.client.get("/chores/verify/")
         self.assertContains(r, "Sweep")
+
+
+from datetime import date
+
+
+class RecurrenceTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.parent = U.objects.create_user("mumR", password="secret123", role="parent", household=self.h)
+        self.child = U.objects.create_user("kidR", password="secret123", role="child", household=self.h)
+
+    def _chore(self, recurrence, due):
+        return Chore.objects.create(
+            title="Trash", assignee=self.child, household=self.h,
+            points=2, recurrence=recurrence, due_date=due, status="done")
+
+    def test_daily_spawns_next_day(self):
+        c = self._chore("daily", date(2026, 1, 10))
+        nxt = c.spawn_next()
+        self.assertEqual(nxt.due_date, date(2026, 1, 11))
+        self.assertEqual(nxt.status, "assigned")
+        self.assertEqual(nxt.recurrence, "daily")
+
+    def test_weekly_spawns_same_weekday(self):
+        c = self._chore("weekly", date(2026, 1, 10))
+        nxt = c.spawn_next()
+        self.assertEqual(nxt.due_date, date(2026, 1, 17))
+        self.assertEqual(nxt.due_date.weekday(), c.due_date.weekday())
+
+    def test_none_has_no_successor(self):
+        c = self._chore("none", date(2026, 1, 10))
+        self.assertIsNone(c.spawn_next())
+
+    def test_verify_spawns_next_occurrence(self):
+        c = self._chore("daily", date(2026, 1, 10))
+        self.client.login(username="mumR", password="secret123")
+        self.client.post(f"/chores/{c.id}/verify/")
+        assigned = Chore.objects.filter(assignee=self.child, status="assigned", recurrence="daily")
+        self.assertEqual(assigned.count(), 1)

@@ -102,6 +102,7 @@ def chore_verify(request, chore_id):
     if chore.status == Chore.Status.DONE:
         chore.status = Chore.Status.VERIFIED
         chore.save(update_fields=["status"])
+        chore.spawn_next()
     return render(request, "chores/_verify_row.html", {"chore": chore})
 
 
