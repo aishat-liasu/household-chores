@@ -402,3 +402,25 @@ class AccessControlTests(TestCase):
         self.client.login(username="pB", password="secret123")
         r = self.client.post(f"/chores/{self.choreA.id}/done/")
         self.assertEqual(r.status_code, 403)
+
+
+from django.core.management import call_command
+
+
+class SeedDemoTests(TestCase):
+    def test_seed_creates_expected_objects(self):
+        call_command("seed_demo")
+        hh = Household.objects.get(name="Demo Household")
+        self.assertEqual(hh.members.count(), 4)
+        self.assertEqual(Chore.objects.filter(household=hh).count(), 5)
+        statuses = set(Chore.objects.filter(household=hh).values_list("status", flat=True))
+        self.assertTrue({"assigned", "done", "verified"} <= statuses)
+        recurrences = set(Chore.objects.filter(household=hh).values_list("recurrence", flat=True))
+        self.assertTrue({"none", "daily", "weekly"} <= recurrences)
+        self.assertTrue(self.client.login(username="demo_parent", password="demo12345"))
+
+    def test_seed_is_idempotent(self):
+        call_command("seed_demo")
+        call_command("seed_demo")
+        self.assertEqual(Household.objects.filter(name="Demo Household").count(), 1)
+        self.assertEqual(get_user_model().objects.filter(username="demo_parent").count(), 1)
