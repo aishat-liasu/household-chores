@@ -366,3 +366,39 @@ class TallyTests(TestCase):
         self.client.post(f"/chores/{c.id}/verify/")
         r = self.client.get("/tally/")
         self.assertContains(r, "9 pts")
+
+
+class AccessControlTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.hA = Household.objects.create(name="A")
+        self.hB = Household.objects.create(name="B")
+        self.parentA = U.objects.create_user("pA", password="secret123", role="parent", household=self.hA)
+        self.childA = U.objects.create_user("cA", password="secret123", role="child", household=self.hA)
+        self.parentB = U.objects.create_user("pB", password="secret123", role="parent", household=self.hB)
+        self.choreA = Chore.objects.create(title="A1", assignee=self.childA, household=self.hA, points=2, status="done")
+
+    def test_anonymous_redirected_from_protected_views(self):
+        for url in ["/dashboard/", "/chores/", "/chores/new/", "/members/new/",
+                    "/chores/verify/", "/tally/", "/household/"]:
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 302, url)
+            self.assertIn("/login/", r.url)
+
+    def test_child_forbidden_on_parent_actions(self):
+        self.client.login(username="cA", password="secret123")
+        self.assertEqual(self.client.get("/chores/new/").status_code, 403)
+        self.assertEqual(self.client.get("/members/new/").status_code, 403)
+        self.assertEqual(self.client.get("/chores/verify/").status_code, 403)
+
+    def test_parent_cannot_verify_other_household_chore(self):
+        self.client.login(username="pB", password="secret123")
+        r = self.client.post(f"/chores/{self.choreA.id}/verify/")
+        self.assertEqual(r.status_code, 404)
+        self.choreA.refresh_from_db()
+        self.assertEqual(self.choreA.status, "done")
+
+    def test_member_cannot_mark_others_chore(self):
+        self.client.login(username="pB", password="secret123")
+        r = self.client.post(f"/chores/{self.choreA.id}/done/")
+        self.assertEqual(r.status_code, 403)

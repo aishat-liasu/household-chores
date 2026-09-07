@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from .decorators import parent_required
 from .forms import ChoreForm, MemberCreationForm
 from .models import Chore
 
@@ -20,10 +21,9 @@ def dashboard(request):
 
 
 @login_required
+@parent_required
 def member_create(request):
     """Parent-only: create another family member's account."""
-    if not request.user.is_parent:
-        raise PermissionDenied
     if request.method == "POST":
         form = MemberCreationForm(request.POST)
         if form.is_valid():
@@ -44,10 +44,9 @@ def household_members(request):
 
 
 @login_required
+@parent_required
 def chore_create(request):
     """Parent-only: create a chore and assign it to a household member."""
-    if not request.user.is_parent:
-        raise PermissionDenied
     household = request.user.household
     if request.method == "POST":
         form = ChoreForm(request.POST, household=household)
@@ -83,21 +82,19 @@ def chore_mark_done(request, chore_id):
 
 
 @login_required
+@parent_required
 def pending_verifications(request):
     """Parent-only: chores in the parent's household awaiting verification."""
-    if not request.user.is_parent:
-        raise PermissionDenied
     chores = Chore.objects.filter(
         household=request.user.household, status=Chore.Status.DONE)
     return render(request, "chores/verify_list.html", {"chores": chores})
 
 
 @login_required
+@parent_required
 @require_POST
 def chore_verify(request, chore_id):
-    """Parent-only: approve a done chore, marking it verified (awards points via the derived tally)."""
-    if not request.user.is_parent:
-        raise PermissionDenied
+    """Parent-only: approve a done chore in the parent's household."""
     chore = get_object_or_404(Chore, id=chore_id, household=request.user.household)
     if chore.status == Chore.Status.DONE:
         chore.status = Chore.Status.VERIFIED
