@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{{ household.name|default:"No household" }}</h2>
+  <ul>
+    {% for member in members %}
+      <li>{{ member.username }} ({{ member.role }})</li>
+    {% empty %}
+      <li>No members yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

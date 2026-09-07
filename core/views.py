@@ -32,6 +32,15 @@ def member_create(request):
     return render(request, "members/create.html", {"form": form})
 
 
+@login_required
+def household_members(request):
+    """List members of the signed-in user's household (household-scoped)."""
+    household = request.user.household
+    members = household.members.all() if household else []
+    return render(request, "household/members.html",
+                  {"household": household, "members": members})
+
+
 def health(request):
     """Lightweight health check used to confirm the app is up."""
     return JsonResponse({"status": "ok"})
