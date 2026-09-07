@@ -1,0 +1,6 @@
+{{ chore.title }} — {{ chore.assignee.username }} — {{ chore.points }} pts — {{ chore.get_status_display }}
+{% if chore.status == "done" %}
+  <button hx-post="{% url 'chore_verify' chore.id %}"
+          hx-target="#verify-{{ chore.id }}" hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>Approve</button>
+{% endif %}

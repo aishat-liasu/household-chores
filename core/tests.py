@@ -260,3 +260,45 @@ class MarkDoneTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.chore.refresh_from_db()
         self.assertEqual(self.chore.status, "verified")
+
+
+class VerifyTests(TestCase):
+    def setUp(self):
+        U = get_user_model()
+        self.h = Household.objects.create(name="Home")
+        self.parent = U.objects.create_user("mumV", password="secret123", role="parent", household=self.h)
+        self.child = U.objects.create_user("kidV", password="secret123", role="child", household=self.h)
+        self.chore = Chore.objects.create(
+            title="Sweep", assignee=self.child, household=self.h, points=7, status="done")
+
+    def test_parent_verifies_awards_points_once(self):
+        self.client.login(username="mumV", password="secret123")
+        r = self.client.post(f"/chores/{self.chore.id}/verify/")
+        self.assertEqual(r.status_code, 200)
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "verified")
+        self.assertEqual(self.child.verified_points, 7)
+        # re-verify must not double-count
+        self.client.post(f"/chores/{self.chore.id}/verify/")
+        self.assertEqual(self.child.verified_points, 7)
+
+    def test_child_cannot_verify(self):
+        self.client.login(username="kidV", password="secret123")
+        r = self.client.post(f"/chores/{self.chore.id}/verify/")
+        self.assertEqual(r.status_code, 403)
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "done")
+
+    def test_verify_requires_done_state(self):
+        self.chore.status = "assigned"
+        self.chore.save()
+        self.client.login(username="mumV", password="secret123")
+        self.client.post(f"/chores/{self.chore.id}/verify/")
+        self.chore.refresh_from_db()
+        self.assertEqual(self.chore.status, "assigned")
+        self.assertEqual(self.child.verified_points, 0)
+
+    def test_pending_list_shows_done_chore(self):
+        self.client.login(username="mumV", password="secret123")
+        r = self.client.get("/chores/verify/")
+        self.assertContains(r, "Sweep")
