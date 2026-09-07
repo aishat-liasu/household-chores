@@ -1,10 +1,153 @@
-:root { --bg:#faf7f2; --ink:#2b2b2b; --accent:#4a7c59; }
+/*
+ * Styling approach: a single hand-written CSS file (no framework, no build step).
+ * Rationale: v1 is small and server-rendered with HTMX, so plain CSS keeps it
+ * lightweight, dependency-free, and easy to maintain. Full theming/design system
+ * is out of scope (Phase 2).
+ */
+
+:root {
+  --bg: #f6f3ee;
+  --surface: #ffffff;
+  --ink: #23262a;
+  --muted: #5d6570;
+  --accent: #3f7d54;
+  --accent-dark: #2f5f40;
+  --border: #e3ddd2;
+  --danger: #b3261e;
+  --focus: #1d6fe0;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.04);
+}
+
 * { box-sizing: border-box; }
-body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-       background:var(--bg); color:var(--ink); }
-.site-header { background:var(--accent); color:#fff; padding:1rem 1.25rem; }
-.site-title { margin:0; font-size:1.25rem; }
-.content { padding:1.25rem; max-width:800px; margin:0 auto; }
-button { background:var(--accent); color:#fff; border:0; padding:.5rem .9rem;
-         border-radius:6px; cursor:pointer; font-size:1rem; }
-#ping-result { margin-left:.5rem; font-weight:600; color:var(--accent); }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.wrap { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+/* Skip link (a11y) */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent-dark);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0 0 var(--radius) 0;
+  z-index: 100;
+}
+.skip-link:focus { left: 0; }
+
+/* Header */
+.site-header {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 60px;
+  flex-wrap: wrap;
+}
+.brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: .2px;
+}
+.brand:hover { text-decoration: none; opacity: .95; }
+
+/* Main content */
+main.content { padding: 28px 20px 56px; }
+
+h1, h2, h3 { line-height: 1.25; color: var(--ink); }
+h2 { font-size: 1.4rem; margin: 0 0 18px; }
+
+p { margin: 0 0 14px; }
+a { color: var(--accent-dark); }
+
+/* Lists rendered as cards */
+main.content ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+main.content ul li {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Forms */
+form { max-width: 460px; }
+form p { margin: 0 0 14px; }
+label { display: block; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+input, select, textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+textarea { min-height: 90px; }
+.helptext, .helptext li { color: var(--muted); font-size: .85rem; }
+ul.errorlist { color: var(--danger); padding-left: 0; margin: 4px 0; }
+ul.errorlist li { all: unset; display: block; color: var(--danger); font-size: .88rem; }
+.error { color: var(--danger); font-weight: 600; }
+
+/* Buttons */
+button, .btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover, .btn:hover { background: var(--accent-dark); }
+main.content ul li button { padding: 7px 14px; }
+
+/* Focus states (a11y) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+#ping-result { font-weight: 700; color: var(--accent-dark); }
+
+@media (max-width: 560px) {
+  main.content ul li { flex-direction: column; align-items: flex-start; }
+  .header-inner { min-height: 52px; }
+}
